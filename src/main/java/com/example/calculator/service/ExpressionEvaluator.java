@@ -224,8 +224,12 @@ public class ExpressionEvaluator {
         if (token == null || token.isEmpty()) {
             return false;
         }
-        char first = token.charAt(0);
-        return Character.isDigit(first) || first == '-' || first == '.';
+        try {
+            Double.parseDouble(token);
+            return true;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
     }
 
     private double applyOperator(String operator, double left, double right) {
