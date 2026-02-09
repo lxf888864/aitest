@@ -2,6 +2,7 @@ package com.example.calculator.controller;
 
 import com.example.calculator.model.CalcRequest;
 import com.example.calculator.model.CalcResponse;
+import com.example.calculator.service.ExpressionEvaluator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class CalculatorController {
+
+    private final ExpressionEvaluator evaluator = new ExpressionEvaluator();
 
     @PostMapping("/calc")
     public ResponseEntity<CalcResponse> calculate(@RequestBody CalcRequest request) {
@@ -81,6 +84,20 @@ public class CalculatorController {
                             .body(new CalcResponse(Double.NaN, "Unsupported operation."));
             }
 
+            return ResponseEntity.ok(new CalcResponse(result, "OK"));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new CalcResponse(Double.NaN, ex.getMessage()));
+        }
+    }
+
+    @PostMapping("/eval")
+    public ResponseEntity<CalcResponse> evaluateExpression(@RequestBody CalcRequest request) {
+        if (request.getExpression() == null || request.getExpression().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(new CalcResponse(Double.NaN, "Expression is required."));
+        }
+        try {
+            double result = evaluator.evaluate(request.getExpression());
             return ResponseEntity.ok(new CalcResponse(result, "OK"));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

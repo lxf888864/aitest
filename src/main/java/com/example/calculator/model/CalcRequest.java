@@ -4,6 +4,7 @@ public class CalcRequest {
     private String operation;
     private Double a;
     private Double b;
+    private String expression;
 
     public String getOperation() {
         return operation;
@@ -27,5 +28,13 @@ public class CalcRequest {
 
     public void setB(Double b) {
         this.b = b;
+    }
+
+    public String getExpression() {
+        return expression;
+    }
+
+    public void setExpression(String expression) {
+        this.expression = expression;
     }
 }

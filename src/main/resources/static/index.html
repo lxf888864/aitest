@@ -8,36 +8,63 @@
         :root {
             color-scheme: light;
             font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            --bg: #f5f7fb;
+            --card: #ffffff;
+            --text: #1f2a44;
+            --muted: #6b7a90;
+            --primary: #3b82f6;
+            --accent: #10b981;
+            --border: #e3e8f1;
         }
         body {
             margin: 0;
-            background: linear-gradient(120deg, #f2f6ff, #fefefe);
-            color: #1f2a44;
+            background: var(--bg);
+            color: var(--text);
         }
         .container {
-            max-width: 900px;
+            max-width: 980px;
             margin: 0 auto;
-            padding: 32px 20px 48px;
+            padding: 40px 20px 56px;
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 1.2fr 0.8fr;
         }
         header {
+            grid-column: 1 / -1;
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 8px;
         }
         header h1 {
             margin-bottom: 8px;
         }
         .card {
-            background: #fff;
+            background: var(--card);
             border-radius: 16px;
             box-shadow: 0 12px 30px rgba(18, 38, 63, 0.08);
             padding: 24px;
-            display: grid;
-            gap: 24px;
+            border: 1px solid var(--border);
         }
-        .inputs {
+        .status {
+            background: #f0f5ff;
+            color: #2b4ea1;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .expression {
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            font-size: 16px;
+            color: #36415f;
+            background: #fbfcff;
             display: grid;
-            gap: 16px;
-            grid-template-columns: 1fr;
+            gap: 6px;
+        }
+        .expression .value {
+            font-size: 20px;
+            font-weight: 600;
         }
         label {
             display: block;
@@ -51,54 +78,82 @@
             border: 1px solid #d0d7e2;
             font-size: 16px;
         }
-        .actions {
+        .keypad {
             display: grid;
             gap: 12px;
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
+            margin-top: 20px;
         }
-        button {
+        .key {
             border: none;
             padding: 12px 16px;
             border-radius: 10px;
-            background: #3d6df2;
-            color: #fff;
+            background: #f4f6fb;
+            color: #2a3655;
             font-weight: 600;
             font-size: 15px;
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
-        }
-        button.secondary {
-            background: #f4f6fb;
-            color: #2a3655;
             border: 1px solid #d0d7e2;
         }
-        button:hover {
+        .key.primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: transparent;
+        }
+        .key.accent {
+            background: var(--accent);
+            color: #fff;
+            border-color: transparent;
+        }
+        .key:hover {
             transform: translateY(-1px);
             box-shadow: 0 8px 16px rgba(61, 109, 242, 0.18);
         }
         .result {
-            background: #f4f6fb;
+            margin-top: 16px;
+            background: #ecfdf5;
+            border: 1px solid #d1fae5;
             border-radius: 12px;
-            padding: 16px;
-            font-size: 18px;
+            padding: 14px;
             display: grid;
-            gap: 4px;
-        }
-        .expression {
-            background: #f8fafc;
-            border: 1px dashed #d0d7e2;
-            border-radius: 12px;
-            padding: 12px 14px;
+            gap: 6px;
             font-size: 16px;
-            color: #36415f;
+            color: #047857;
         }
         .result span {
             font-weight: 600;
-            color: #0f1f4d;
         }
         .hint {
-            color: #56607a;
+            color: var(--muted);
             font-size: 13px;
+        }
+        .side {
+            display: grid;
+            gap: 16px;
+        }
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 8px;
+        }
+        ul {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+        }
+        .example {
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: #92400e;
+            font-weight: 600;
+        }
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -106,70 +161,123 @@
 <div class="container">
     <header>
         <h1>在线计算器</h1>
-        <p class="hint">支持四则运算与常见科学计算（角度制）。</p>
+        <p class="hint">支持四则运算、括号与常见科学函数（角度制）。</p>
     </header>
     <div class="card">
-        <div class="inputs">
-            <div>
-                <label for="inputA">数值 1</label>
-                <input id="inputA" type="number" placeholder="请输入第一个数值" />
-            </div>
-            <div>
-                <label for="inputB">数值 2（如需）</label>
-                <input id="inputB" type="number" placeholder="请输入第二个数值" />
-            </div>
+        <div class="status">状态：解析表达式（支持运算优先级与括号）</div>
+        <div class="expression">
+            <div class="hint">当前表达式</div>
+            <div class="value" id="expressionBar">--</div>
         </div>
-        <div class="expression" id="expressionBar">表达式：--</div>
-        <div class="actions">
-            <button onclick="perform('add')">+</button>
-            <button onclick="perform('subtract')">-</button>
-            <button onclick="perform('multiply')">×</button>
-            <button onclick="perform('divide')">÷</button>
-            <button onclick="perform('power')">^</button>
-            <button onclick="perform('sqrt')">√</button>
-            <button onclick="perform('sin')">sin</button>
-            <button onclick="perform('cos')">cos</button>
-            <button onclick="perform('tan')">tan</button>
-            <button onclick="perform('log10')">log</button>
-            <button onclick="perform('ln')">ln</button>
-            <button class="secondary" onclick="clearInputs()">清空</button>
+        <div style="margin-top: 16px;">
+            <label for="expressionInput">表达式输入</label>
+            <input id="expressionInput" type="text" placeholder="例如：10-2*3" />
+        </div>
+
+        <div class="keypad">
+            <button class="key" onclick="appendToken('7')">7</button>
+            <button class="key" onclick="appendToken('8')">8</button>
+            <button class="key" onclick="appendToken('9')">9</button>
+            <button class="key" onclick="appendOperator('/')">÷</button>
+            <button class="key" onclick="appendToken('4')">4</button>
+            <button class="key" onclick="appendToken('5')">5</button>
+            <button class="key" onclick="appendToken('6')">6</button>
+            <button class="key" onclick="appendOperator('*')">×</button>
+            <button class="key" onclick="appendToken('1')">1</button>
+            <button class="key" onclick="appendToken('2')">2</button>
+            <button class="key" onclick="appendToken('3')">3</button>
+            <button class="key" onclick="appendOperator('-')">-</button>
+            <button class="key" onclick="appendToken('0')">0</button>
+            <button class="key" onclick="appendToken('.')">.</button>
+            <button class="key" onclick="appendOperator('+')">+</button>
+            <button class="key primary" onclick="evaluateExpression()">=</button>
+            <button class="key" onclick="appendToken('(')">(</button>
+            <button class="key" onclick="appendToken(')')">)</button>
+            <button class="key" onclick="appendOperator('^')">^</button>
+            <button class="key" onclick="appendFunction('sqrt')">√</button>
+            <button class="key" onclick="appendFunction('sin')">sin</button>
+            <button class="key" onclick="appendFunction('cos')">cos</button>
+            <button class="key" onclick="appendFunction('tan')">tan</button>
+            <button class="key" onclick="appendFunction('log')">log</button>
+            <button class="key" onclick="appendFunction('ln')">ln</button>
+            <button class="key accent" onclick="clearInputs()">清空</button>
         </div>
         <div class="result">
             <div>结果：<span id="resultValue">--</span></div>
-            <div class="hint" id="resultMessage">请选择运算。</div>
+            <div class="hint" id="resultMessage">请输入表达式。</div>
+        </div>
+    </div>
+    <div class="side">
+        <div class="card">
+            <p class="panel-title">支持能力</p>
+            <ul>
+                <li>运算优先级（× ÷ 优先于 + -）</li>
+                <li>括号嵌套与函数计算</li>
+                <li>即时显示表达式与结果</li>
+            </ul>
+        </div>
+        <div class="card">
+            <p class="panel-title">示例表达式</p>
+            <div class="example">10 - 2 * 3 = 4</div>
         </div>
     </div>
 </div>
 <script>
-    async function perform(operation) {
-        const a = document.getElementById('inputA').value;
-        const b = document.getElementById('inputB').value;
-        if (a === '') {
-            updateResult('请输入第一个数值', true);
-            updateExpression('--');
+    const expressionInput = document.getElementById('expressionInput');
+
+    function syncExpressionBar() {
+        const value = expressionInput.value.trim();
+        const displayValue = value === '' ? '--' : formatExpression(value);
+        document.getElementById('expressionBar').textContent = displayValue;
+    }
+
+    function appendToken(token) {
+        expressionInput.value += token;
+        syncExpressionBar();
+    }
+
+    function appendOperator(operator) {
+        expressionInput.value += operator;
+        syncExpressionBar();
+    }
+
+    function appendFunction(fnName) {
+        const mapping = {
+            sqrt: 'sqrt(',
+            sin: 'sin(',
+            cos: 'cos(',
+            tan: 'tan(',
+            log: 'log(',
+            ln: 'ln('
+        };
+        expressionInput.value += mapping[fnName] || '';
+        syncExpressionBar();
+    }
+
+    function formatExpression(expression) {
+        return expression.replaceAll('*', '×').replaceAll('/', '÷');
+    }
+
+    async function evaluateExpression() {
+        const expression = expressionInput.value.trim();
+        if (expression === '') {
+            updateResult('--', true, '请输入表达式。');
+            syncExpressionBar();
             return;
         }
 
-        const payload = {
-            operation,
-            a: Number(a),
-            b: b === '' ? null : Number(b)
-        };
-
-        updateExpression(buildExpression(operation, payload.a, payload.b));
-
         try {
-            const response = await fetch('/api/calc', {
+            const response = await fetch('/api/eval', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ expression })
             });
             const data = await response.json();
             if (!response.ok) {
                 updateResult(data.message || '计算失败', true);
                 return;
             }
-            updateResult(data.result, false, data.message);
+            updateResult(data.result, false, '计算成功。');
         } catch (error) {
             updateResult('服务不可用，请稍后重试', true);
         }
@@ -183,46 +291,14 @@
         resultMessage.style.color = isError ? '#c0392b' : '#56607a';
     }
 
-    function updateExpression(text) {
-        document.getElementById('expressionBar').textContent = `表达式：${text}`;
-    }
-
-    function buildExpression(operation, a, b) {
-        const displayB = b === null || Number.isNaN(b) ? '' : b;
-        switch (operation) {
-            case 'add':
-                return `${a} + ${displayB}`;
-            case 'subtract':
-                return `${a} - ${displayB}`;
-            case 'multiply':
-                return `${a} × ${displayB}`;
-            case 'divide':
-                return `${a} ÷ ${displayB}`;
-            case 'power':
-                return `${a} ^ ${displayB}`;
-            case 'sqrt':
-                return `√${a}`;
-            case 'sin':
-                return `sin(${a})`;
-            case 'cos':
-                return `cos(${a})`;
-            case 'tan':
-                return `tan(${a})`;
-            case 'log10':
-                return `log10(${a})`;
-            case 'ln':
-                return `ln(${a})`;
-            default:
-                return '--';
-        }
-    }
-
     function clearInputs() {
-        document.getElementById('inputA').value = '';
-        document.getElementById('inputB').value = '';
-        updateResult('--', false, '请选择运算。');
-        updateExpression('--');
+        expressionInput.value = '';
+        updateResult('--', false, '请输入表达式。');
+        syncExpressionBar();
     }
+
+    expressionInput.addEventListener('input', syncExpressionBar);
+    syncExpressionBar();
 </script>
 </body>
 </html>
