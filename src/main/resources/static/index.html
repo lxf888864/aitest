@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>在线计算器</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        body {
+            margin: 0;
+            background: linear-gradient(120deg, #f2f6ff, #fefefe);
+            color: #1f2a44;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 20px 48px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        header h1 {
+            margin-bottom: 8px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(18, 38, 63, 0.08);
+            padding: 24px;
+            display: grid;
+            gap: 24px;
+        }
+        .inputs {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid #d0d7e2;
+            font-size: 16px;
+        }
+        .actions {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        }
+        button {
+            border: none;
+            padding: 12px 16px;
+            border-radius: 10px;
+            background: #3d6df2;
+            color: #fff;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        button.secondary {
+            background: #f4f6fb;
+            color: #2a3655;
+            border: 1px solid #d0d7e2;
+        }
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px rgba(61, 109, 242, 0.18);
+        }
+        .result {
+            background: #f4f6fb;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 18px;
+            display: grid;
+            gap: 4px;
+        }
+        .result span {
+            font-weight: 600;
+            color: #0f1f4d;
+        }
+        .hint {
+            color: #56607a;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>在线计算器</h1>
+        <p class="hint">支持四则运算与常见科学计算（角度制）。</p>
+    </header>
+    <div class="card">
+        <div class="inputs">
+            <div>
+                <label for="inputA">数字 A</label>
+                <input id="inputA" type="number" placeholder="请输入数字 A" />
+            </div>
+            <div>
+                <label for="inputB">数字 B（如需）</label>
+                <input id="inputB" type="number" placeholder="请输入数字 B" />
+            </div>
+        </div>
+        <div class="actions">
+            <button onclick="perform('add')">A + B</button>
+            <button onclick="perform('subtract')">A - B</button>
+            <button onclick="perform('multiply')">A × B</button>
+            <button onclick="perform('divide')">A ÷ B</button>
+            <button onclick="perform('power')">A ^ B</button>
+            <button onclick="perform('sqrt')">√A</button>
+            <button onclick="perform('sin')">sin(A)</button>
+            <button onclick="perform('cos')">cos(A)</button>
+            <button onclick="perform('tan')">tan(A)</button>
+            <button onclick="perform('log10')">log10(A)</button>
+            <button onclick="perform('ln')">ln(A)</button>
+            <button class="secondary" onclick="clearInputs()">清空</button>
+        </div>
+        <div class="result">
+            <div>结果：<span id="resultValue">--</span></div>
+            <div class="hint" id="resultMessage">请选择运算。</div>
+        </div>
+    </div>
+</div>
+<script>
+    async function perform(operation) {
+        const a = document.getElementById('inputA').value;
+        const b = document.getElementById('inputB').value;
+        if (a === '') {
+            updateResult('请输入数字 A', true);
+            return;
+        }
+
+        const payload = {
+            operation,
+            a: Number(a),
+            b: b === '' ? null : Number(b)
+        };
+
+        try {
+            const response = await fetch('/api/calc', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                updateResult(data.message || '计算失败', true);
+                return;
+            }
+            updateResult(data.result, false, data.message);
+        } catch (error) {
+            updateResult('服务不可用，请稍后重试', true);
+        }
+    }
+
+    function updateResult(value, isError, message) {
+        const resultValue = document.getElementById('resultValue');
+        const resultMessage = document.getElementById('resultMessage');
+        resultValue.textContent = value;
+        resultMessage.textContent = message || (isError ? '请检查输入。' : '计算成功。');
+        resultMessage.style.color = isError ? '#c0392b' : '#56607a';
+    }
+
+    function clearInputs() {
+        document.getElementById('inputA').value = '';
+        document.getElementById('inputB').value = '';
+        updateResult('--', false, '请选择运算。');
+    }
+</script>
+</body>
+</html>
